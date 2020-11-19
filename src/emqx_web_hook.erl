@@ -86,6 +86,7 @@ unload() ->
 
 on_client_connect(ConnInfo = #{clientid := ClientId, username := Username, peername := {Peerhost, _}}, _ConnProp, _Env) ->
     emqx_metrics:inc('webhook.client_connect'),
+    io:fwrite("hello i am in on_client_connect"),
     Params = #{ action => client_connect
               , node => node()
               , clientid => ClientId
@@ -93,6 +94,7 @@ on_client_connect(ConnInfo = #{clientid := ClientId, username := Username, peern
               , ipaddress => iolist_to_binary(ntoa(Peerhost))
               , keepalive => maps:get(keepalive, ConnInfo)
               , proto_ver => maps:get(proto_ver, ConnInfo)
+              , myvar => myvartest
               },
     send_http_request(Params).
 
@@ -102,6 +104,7 @@ on_client_connect(ConnInfo = #{clientid := ClientId, username := Username, peern
 
 on_client_connack(ConnInfo = #{clientid := ClientId, username := Username, peername := {Peerhost, _}}, Rc, _AckProp, _Env) ->
     emqx_metrics:inc('webhook.client_connack'),
+    io:fwrite("hello i am in on_client_connack"),
     Params = #{ action => client_connack
               , node => node()
               , clientid => ClientId
@@ -110,6 +113,7 @@ on_client_connack(ConnInfo = #{clientid := ClientId, username := Username, peern
               , keepalive => maps:get(keepalive, ConnInfo)
               , proto_ver => maps:get(proto_ver, ConnInfo)
               , conn_ack => Rc
+              , myvar => myvartest
               },
     send_http_request(Params).
 
@@ -119,6 +123,7 @@ on_client_connack(ConnInfo = #{clientid := ClientId, username := Username, peern
 
 on_client_connected(#{clientid := ClientId, username := Username, peerhost := Peerhost}, ConnInfo, _Env) ->
     emqx_metrics:inc('webhook.client_connected'),
+  io:fwrite("hello i am in on_client_connected"),
     Params = #{ action => client_connected
               , node => node()
               , clientid => ClientId
@@ -127,6 +132,7 @@ on_client_connected(#{clientid := ClientId, username := Username, peerhost := Pe
               , keepalive => maps:get(keepalive, ConnInfo)
               , proto_ver => maps:get(proto_ver, ConnInfo)
               , connected_at => maps:get(connected_at, ConnInfo)
+              , myvar => myvartest
               },
     send_http_request(Params).
 
@@ -138,12 +144,14 @@ on_client_disconnected(ClientInfo, {shutdown, Reason}, ConnInfo, Env) when is_at
     on_client_disconnected(ClientInfo, Reason, ConnInfo, Env);
 on_client_disconnected(#{clientid := ClientId, username := Username}, Reason, ConnInfo, _Env) ->
     emqx_metrics:inc('webhook.client_disconnected'),
+  io:fwrite("hello i am in on_client_disconnected"),
     Params = #{ action => client_disconnected
               , node => node()
               , clientid => ClientId
               , username => maybe(Username)
               , reason => stringfy(maybe(Reason))
               , disconnected_at => maps:get(disconnected_at, ConnInfo, erlang:system_time(millisecond))
+              , myvar => myvartest
               },
     send_http_request(Params).
 
@@ -248,6 +256,8 @@ on_message_publish(Message = #message{topic = Topic}, {Filter}) ->
     with_filter(
       fun() ->
         emqx_metrics:inc('webhook.message_publish'),
+
+        io:fwrite("hello kiran on_message_publish"),
         {FromClientId, FromUsername} = parse_from(Message),
         Params = #{ action => message_publish
                   , node => node()
@@ -258,6 +268,7 @@ on_message_publish(Message = #message{topic = Topic}, {Filter}) ->
                   , retain => emqx_message:get_flag(retain, Message)
                   , payload => encode_payload(Message#message.payload)
                   , ts => Message#message.timestamp
+                  , myvar => myvar
                   },
         send_http_request(Params),
         {ok, Message}
@@ -301,6 +312,7 @@ on_message_acked(#{clientid := ClientId, username := Username},
     with_filter(
       fun() ->
         emqx_metrics:inc('webhook.message_acked'),
+        io:fwrite("hello kiran on_message_acked"),
         {FromClientId, FromUsername} = parse_from(Message),
         Params = #{ action => message_acked
                   , node => node()
@@ -313,6 +325,7 @@ on_message_acked(#{clientid := ClientId, username := Username},
                   , retain => emqx_message:get_flag(retain, Message)
                   , payload => encode_payload(Message#message.payload)
                   , ts => Message#message.timestamp
+                  , myvar => myvartest
                   },
         send_http_request(Params)
       end, Topic, Filter).
