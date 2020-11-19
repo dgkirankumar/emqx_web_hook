@@ -30,5 +30,5 @@ start(_StartType, _StartArgs) ->
     emqx_web_hook:load(),
     {ok, Sup}.
 
-stop(_State) 
+stop(_State) ->
     emqx_web_hook:unload().
